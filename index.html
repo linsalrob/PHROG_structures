@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phage Gallery</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f7f7f7; }
+    header, nav, footer { padding: 1em; background: #222; color: white; text-align: center; }
+    nav a { color: #61dafb; margin: 0 1em; text-decoration: none; }
+    .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; padding: 10px; justify-content: center; }
+    .grid img { width: 100px; height: 100px; cursor: pointer; border: 1px solid #ccc; background: white; }
+    .montage-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 10px; }
+    .montage-list a { display: inline-block; border: 1px solid #ccc; padding: 5px; background: white; text-align: center; text-decoration: none; color: black; }
+    .full-image { display: block; margin: 20px auto; max-width: 90%; }
+    .download-link { display: block; text-align: center; margin: 10px; font-size: 1.1em; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Welcome to the Phage Gallery</h1>
+  </header>
+  <nav>
+    <a href="#/">Home</a>
+    <a href="#/montages">Montages</a>
+  </nav>
+  <main id="app"></main>
+  <footer>
+    <p>&copy; 2025 Phage Research Group</p>
+  </footer>
+  <script>
+    const routes = {
+      '/': () => `
+        <section id="intro">
+          <h2>Introduction</h2>
+          <p>This site hosts an interactive gallery of phage datasets. Browse montages and detailed data visualizations for each dataset.</p>
+        </section>
+      `,
+      '/montages': () => {
+        let html = '<section id="montages"><h2>Montages</h2><div class="montage-list">';
+        for (let i = 1; i <= 388; i++) {
+          const id = i.toString().padStart(3, '0');
+          html += `<a href="#/dataset/${id}"><img src="montage/montage_${id}.png" alt="Montage ${id}"><br>Montage ${id}</a>`;
+        }
+        html += '</div></section>';
+        return html;
+      },
+      '/dataset/:id': (id) => {
+        let html = `<h2>Dataset ${id}</h2><div class="grid">`;
+        for (let i = 1; i <= 100; i++) {
+          const thumb = `set_${id}_img_${i.toString().padStart(3, '0')}`;
+          html += `<img src="thumbnail/${thumb}.png" alt="${thumb}" onclick="viewImage('${thumb}')">`;
+        }
+        html += '</div><img id="fullImage" class="full-image" style="display:none;"><a id="downloadLink" class="download-link" style="display:none;">Download PDB</a>';
+        return html;
+      }
+    };
+
+    function viewImage(name) {
+      const img = document.getElementById('fullImage');
+      const link = document.getElementById('downloadLink');
+      img.src = `png/${name}.png`;
+      img.style.display = 'block';
+      link.href = `pdb/${name}.pdb`;
+      link.download = `${name}.pdb`;
+      link.style.display = 'block';
+      link.innerText = `Download ${name}.pdb`;
+    }
+
+    function parseRoute() {
+      const hash = window.location.hash || '#/';
+      const pathParts = hash.slice(2).split('/');
+      const route = '/' + pathParts[0];
+      const app = document.getElementById('app');
+
+      if (route === '/dataset' && pathParts[1]) {
+        app.innerHTML = routes['/dataset/:id'](pathParts[1]);
+      } else if (routes[route]) {
+        app.innerHTML = routes[route]();
+      } else {
+        app.innerHTML = '<p>Page not found</p>';
+      }
+    }
+
+    window.addEventListener('hashchange', parseRoute);
+    window.addEventListener('load', parseRoute);
+  </script>
+</body>
+</html>
