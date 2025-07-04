@@ -68,13 +68,16 @@
         return html;
       },
       '/dataset/:id': (id) => {
-        let html = `<h2>Dataset ${id}</h2><div class="grid">`;
-        for (let i = 1; i <= 100; i++) {
+        let html = `<h2>Dataset ${id}</h2>`;
+	html += '<img id="fullImage" class="full-image" style="display:none;"><a id="downloadLink" class="download-link" style="display:none;">Download PDB</a>';
+	html += '<h3>All images in this dataset</h3>'
+	html += `<div class="grid">`;
+        for (let i = 1; i < 100; i++) {
           const num = i.toString().padStart(2, '0');
           const name = `${id}${num}`;
           html += `<img src="thumbnails/${id}/${name}.png" alt="${name}" onclick="viewImage('${id}', '${name}')">`;
         }
-        html += '</div><img id="fullImage" class="full-image" style="display:none;"><a id="downloadLink" class="download-link" style="display:none;">Download PDB</a>';
+        html += '</div>';
         return html;
       }
     };
