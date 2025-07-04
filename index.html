@@ -94,11 +94,11 @@
     function goToPhrog() {
       const input = document.getElementById('phrogInput').value.trim();
       const num = parseInt(input);
-      if (!isNaN(num) && num >= 0 && num < 388) {
+      if (!isNaN(num) && num >= 0 && num < 389) {
         const id = `phrog_${num.toString().padStart(3, '0')}`;
         window.location.hash = `#/dataset/${id}`;
       } else {
-        alert('Please enter a valid PHROG number between 0 and 387.');
+        alert('Please enter a valid PHROG number between 0 and 388.');
       }
     }
 
