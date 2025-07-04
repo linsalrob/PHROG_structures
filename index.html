@@ -151,6 +151,9 @@
 
       if (route === '/dataset' && pathParts[1]) {
         app.innerHTML = routes['/dataset/:id'](pathParts[1]);
+        if (pathParts[2]) {
+		setTimeout(() => viewImage(pathParts[1], pathParts[2]), 0);
+	}
       } else if (routes[route]) {
         app.innerHTML = routes[route]();
       } else {
