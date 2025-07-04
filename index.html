@@ -14,6 +14,15 @@
     .montage-list a { display: inline-block; border: 1px solid #ccc; padding: 5px; background: white; text-align: center; text-decoration: none; color: black; }
     .full-image { display: block; margin: 20px auto; max-width: 90%; }
     .download-link { display: block; text-align: center; margin: 10px; font-size: 1.1em; }
+    .search-box { text-align: center; margin: 20px; position: relative; }
+    .search-box input { padding: 5px; font-size: 1em; width: 200px; }
+    .search-box button { padding: 6px 10px; font-size: 1em; }
+    .autocomplete-items { position: absolute; border: 1px solid #ccc; background: white; width: 200px; max-height: 150px; overflow-y: auto; z-index: 99; left: 50%; transform: translateX(-50%); }
+    .autocomplete-items div { padding: 5px; cursor: pointer; }
+    .autocomplete-items div:hover { background-color: #f1f1f1; }
+    .spinner { display: none; margin: 20px auto; border: 8px solid #f3f3f3; border-top: 8px solid #3498db; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .error-message { text-align: center; color: red; font-weight: bold; margin-top: 10px; display: none; }
   </style>
 </head>
 <body>
@@ -25,6 +34,8 @@
     <a href="#/montages">Montages</a>
   </nav>
   <main id="app"></main>
+  <div id="spinner" class="spinner"></div>
+  <div id="errorMessage" class="error-message">Image could not be loaded. This PHROG may not have an image yet.</div>
   <footer>
     <p>&copy; 2025 Phage Research Group</p>
   </footer>
@@ -34,13 +45,24 @@
         <section id="intro">
           <h2>Introduction</h2>
           <p>This site hosts an interactive gallery of phage datasets. Browse montages and detailed data visualizations for each dataset.</p>
+          <div class="search-box">
+            <input type="text" id="phrogInput" placeholder="Enter PHROG number (e.g., 42)" oninput="autocomplete(this)" />
+            <div id="autocomplete-list" class="autocomplete-items"></div>
+            <button onclick="goToPhrog()">Go</button>
+          </div>
         </section>
       `,
       '/montages': () => {
-        let html = '<section id="montages"><h2>Montages</h2><div class="montage-list">';
-        for (let i = 1; i <= 388; i++) {
-          const id = i.toString().padStart(3, '0');
-          html += `<a href="#/dataset/${id}"><img src="montage/montage_${id}.png" alt="Montage ${id}"><br>Montage ${id}</a>`;
+        let html = '<section id="montages"><h2>Montages</h2>';
+        html += `<div class="search-box">
+          <input type="text" id="phrogInput" placeholder="Enter PHROG number (e.g., 42)" oninput="autocomplete(this)" />
+          <div id="autocomplete-list" class="autocomplete-items"></div>
+          <button onclick="goToPhrog()">Go</button>
+        </div>`;
+        html += '<div class="montage-list">';
+        for (let i = 0; i < 388; i++) {
+          const id = `phrog_${i.toString().padStart(3, '0')}`;
+          html += `<a href="#/dataset/${id}"><img src="montage/${id}_montage.png" alt="Montage ${id}"><br>${id}</a>`;
         }
         html += '</div></section>';
         return html;
@@ -48,23 +70,68 @@
       '/dataset/:id': (id) => {
         let html = `<h2>Dataset ${id}</h2><div class="grid">`;
         for (let i = 1; i <= 100; i++) {
-          const thumb = `set_${id}_img_${i.toString().padStart(3, '0')}`;
-          html += `<img src="thumbnail/${thumb}.png" alt="${thumb}" onclick="viewImage('${thumb}')">`;
+          const num = i.toString().padStart(5, '0');
+          const name = `${id}${num}`;
+          html += `<img src="thumbnails/${id}/${name}.png" alt="${name}" onclick="viewImage('${id}', '${name}')">`;
         }
         html += '</div><img id="fullImage" class="full-image" style="display:none;"><a id="downloadLink" class="download-link" style="display:none;">Download PDB</a>';
         return html;
       }
     };
 
-    function viewImage(name) {
+    function goToPhrog() {
+      const input = document.getElementById('phrogInput').value.trim();
+      const num = parseInt(input);
+      if (!isNaN(num) && num >= 0 && num < 388) {
+        const id = `phrog_${num.toString().padStart(3, '0')}`;
+        window.location.hash = `#/dataset/${id}`;
+      } else {
+        alert('Please enter a valid PHROG number between 0 and 387.');
+      }
+    }
+
+    function autocomplete(input) {
+      const list = document.getElementById('autocomplete-list');
+      list.innerHTML = '';
+      const val = input.value;
+      if (!val) return;
+      for (let i = 0; i < 388; i++) {
+        const num = i.toString();
+        if (num.startsWith(val)) {
+          const item = document.createElement('div');
+          item.innerText = num;
+          item.onclick = () => {
+            input.value = num;
+            list.innerHTML = '';
+          };
+          list.appendChild(item);
+        }
+      }
+    }
+
+    function viewImage(phrogId, name) {
+      const spinner = document.getElementById('spinner');
+      const error = document.getElementById('errorMessage');
       const img = document.getElementById('fullImage');
       const link = document.getElementById('downloadLink');
-      img.src = `png/${name}.png`;
+      spinner.style.display = 'block';
+      error.style.display = 'none';
+      img.onload = () => {
+        spinner.style.display = 'none';
+        error.style.display = 'none';
+      };
+      img.onerror = () => {
+        spinner.style.display = 'none';
+        error.style.display = 'block';
+        img.style.display = 'none';
+        link.style.display = 'none';
+      };
+      img.src = `png/${phrogId}/${name}.png`;
       img.style.display = 'block';
-      link.href = `pdb/${name}.pdb`;
-      link.download = `${name}.pdb`;
+      link.href = `pdb/${phrogId}/${name}.pdb.gz`;
+      link.download = `${name}.pdb.gz`;
       link.style.display = 'block';
-      link.innerText = `Download ${name}.pdb`;
+      link.innerText = `Download ${name}.pdb.gz`;
     }
 
     function parseRoute() {
