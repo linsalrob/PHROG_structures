@@ -70,7 +70,7 @@
       '/dataset/:id': (id) => {
         let html = `<h2>Dataset ${id}</h2><div class="grid">`;
         for (let i = 1; i <= 100; i++) {
-          const num = i.toString().padStart(5, '0');
+          const num = i.toString().padStart(2, '0');
           const name = `${id}${num}`;
           html += `<img src="thumbnails/${id}/${name}.png" alt="${name}" onclick="viewImage('${id}', '${name}')">`;
         }
