@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Phage Gallery</title>
+  <title>PHROG Structure Gallery</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f7f7f7; }
     header, nav, footer { padding: 1em; background: #222; color: white; text-align: center; }
@@ -140,6 +140,7 @@
       link.download = `${name}.pdb.gz`;
       link.style.display = 'block';
       link.innerText = `Download ${name}.pdb.gz`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function parseRoute() {
