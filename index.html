@@ -78,7 +78,8 @@
       },
       '/dataset/:id': (id) => {
         let html = `<h2>Dataset ${id}</h2>`;
-	html += '<img id="fullImage" class="full-image" style="display:none;"><a id="downloadLink" class="download-link" style="display:none;">Download PDB</a>';
+	html += '<img id="fullImage" class="full-image" style="display:none;">'
+        html += '<a id="permaLink", class="perma-link" style="display:none">Permanent Link</a> | <a id="downloadLink" class="download-link" style="display:none;">Download PDB</a>';
 	html += '<h3>All images in this dataset</h3>'
 	html += `<div class="grid">`;
         for (let i = 1; i < 100; i++) {
@@ -126,6 +127,7 @@
       const error = document.getElementById('errorMessage');
       const img = document.getElementById('fullImage');
       const link = document.getElementById('downloadLink');
+      const perm = document.getElementById('permaLink');
       spinner.style.display = 'block';
       error.style.display = 'none';
       img.onload = () => {
@@ -144,6 +146,10 @@
       link.download = `${name}.pdb.gz`;
       link.style.display = 'block';
       link.innerText = `Download ${name}.pdb.gz`;
+      perm.href = `dataset/${phrogId}/${name}`;
+      perm.style.display = 'block';
+      perm.innerText = `Permanent link to ${name}`;
+
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
