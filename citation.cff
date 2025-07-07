@@ -16,14 +16,15 @@ authors:
     orcid: "https://orcid.org/0000-0001-8383-8949"
 repository-code: "https://github.com/linsalrob/PHROG_structures"
 date-released: "2025-07-07"
+doi: 10.5281/zenodo.15825637
 abstract: >-
  PHROG_structures offers a comprehensive overview of all proteins 
-cataloged in the PHROG database. For each protein, the repository 
-provides corresponding PDB files, making structural data readily 
-available for further analysis. All files are conveniently 
-hyperlinked and easily accessible, enabling users to efficiently 
-explore protein structures and integrate them into their 
-research workflows.
+ catalogued in the PHROG database. For each protein, the repository 
+ provides corresponding PDB files, making structural data readily 
+ available for further analysis. All files are conveniently 
+ hyperlinked and easily accessible, enabling users to efficiently 
+ explore protein structures and integrate them into their 
+ research workflows.
 keywords:
   - phage
   - virus
