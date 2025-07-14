@@ -23,6 +23,8 @@
     .spinner { display: none; margin: 20px auto; border: 8px solid #f3f3f3; border-top: 8px solid #3498db; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
     .error-message { text-align: center; color: red; font-weight: bold; margin-top: 10px; display: none; }
+    .pdbe-molstar-viewer {display: block; width: 90%; height: 500px; min-height: 500px; margin: 20px auto;}
+    .phrog-viewer {display: block; position: relative; width: 100%; height: 100%; overflow: auto;}
   </style>
 </head>
 <body>
@@ -40,6 +42,10 @@
   <footer>
 	  <p>&copy; 2025 <a href="https://fame.flinders.edu.au">FAME</a></p>
   </footer>
+  <!-- PDBe Mol* Plugin JS -->
+  <script src="https://cdn.jsdelivr.net/npm/pdbe-molstar@3.2.0/build/pdbe-molstar-plugin.js"></script>
+  <!-- Pako JS for Gzip support -->
+  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
   <script>
     const routes = {
       '/': () => `
@@ -79,6 +85,7 @@
       '/dataset/:id': (id) => {
         let html = `<h2>Dataset ${id}</h2>`;
 	html += '<img id="fullImage" class="full-image" style="display:none;">'
+  html += '<div id="pdbeMolstarViewer" class="pdbe-molstar-viewer" style="display:none;"><div id="phrogViewer" class="phrog-viewer"></div></div>';
 	html += '<span id="linkWrapper" class="link-wrapper" style="display:none;">'
         html += '<a id="permaLink", class="perma-link">Permanent Link</a> | <a id="downloadLink" class="download-link">Download PDB</a>';
 	html += '</span>'
@@ -130,6 +137,9 @@
       const img = document.getElementById('fullImage');
       const link = document.getElementById('downloadLink');
       const perm = document.getElementById('permaLink');
+      const pbde = document.getElementById('pdbeMolstarViewer');
+      
+
       spinner.style.display = 'block';
       error.style.display = 'none';
       img.onload = () => {
@@ -151,7 +161,12 @@
       perm.href = `#/dataset/${phrogId}/${name}`;
       perm.innerText = `Permanent link to ${name}`;
 
+      pbde.style.display = 'block';
+
       window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      loadGzPdbToViewer(link.href);
+      
     }
 
     function parseRoute() {
@@ -174,6 +189,45 @@
 
     window.addEventListener('hashchange', parseRoute);
     window.addEventListener('load', parseRoute);
+
+    // Load and decompress .pdb.gz files to view
+    async function loadGzPdbToViewer(url) {
+
+      const viewerContainer = document.getElementById('phrogViewer');
+      const viewerInstance = new PDBeMolstarPlugin();
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+
+        const gzBuffer = await response.arrayBuffer();
+
+        // Decompress using pako
+        const decompressed = pako.inflate(gzBuffer, { to: 'string' });
+
+        const blob = new Blob([decompressed], { type: 'text/plain' });
+        const pdbUrl = URL.createObjectURL(blob);
+
+        const options = {
+          customData: {
+            url: pdbUrl,
+            format: 'pdb',
+            binary: false
+          },
+          alphafoldView: true,
+          sequenceView: true,
+          landscape: true,
+          hideControls: false,
+        };
+
+        viewerInstance.render(viewerContainer, options);
+      } catch (err) {
+        alert('Failed to load and decompress .pdb.gz:\n' + err.message);
+        console.error(err);
+      }
+    }
+
+
   </script>
 </body>
 </html>
