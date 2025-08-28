@@ -44,7 +44,6 @@
     <p>&copy; 2025 <a href="https://fame.flinders.edu.au">FAME</a></p>
   </footer>
   <script>
-    let mode = 'monomer'; // default mode
 
     function getModeParam() {
       const params = new URLSearchParams(window.location.search);
@@ -53,7 +52,6 @@
 
     function setMode(newMode) {
       mode = newMode;
-      alert('mode is: ' + mode);
       parseRoute();
     }
 
@@ -183,7 +181,10 @@
         html += '</div></section>';
         return html;
       },
-      '/dataset/:id': (id) => {
+      '/dataset/:id': (idMode) => {
+	idModeParts = idMode.split("?");
+	id = idModeParts[0];
+	mode = idModeParts[1];
         let html = `<h2>Dataset ${id} (${mode})</h2>`;
         html += renderModeToggle();
         html += '<img id="fullImage" class="full-image" style="display:none;">';
