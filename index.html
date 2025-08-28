@@ -44,6 +44,7 @@
     <p>&copy; 2025 <a href="https://fame.flinders.edu.au">FAME</a></p>
   </footer>
   <script>
+    let mode = 'monomer';
 
     function getModeParam() {
       const params = new URLSearchParams(window.location.search);
@@ -52,6 +53,15 @@
 
     function setMode(newMode) {
       mode = newMode;
+      const currentHash = window.location.hash;
+      // Preserve the current dataset in URL while toggling
+      if (currentHash.includes('?')) {
+	      window.location.hash = currentHash.replace(/mode=(monomer|oligomer)/, `mode=${mode}`);
+      } else if (currentHash.startsWith('#/dataset')) {
+	      window.location.hash = `${currentHash}?mode=${mode}`;
+      } else {
+	      parseRoute();
+      }
       parseRoute();
     }
 
