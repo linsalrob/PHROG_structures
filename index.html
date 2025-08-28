@@ -104,7 +104,9 @@
       error.style.display = 'none';
       phrogIdmodeparts = phrogIdmode.split('?');
       phrogId = phrogIdmodeparts[0];
-      mode = phrogIdmodeparts[1].split("=")[1];
+      if (phrogIdmodeparts.length > 1) {
+          mode = phrogIdmodeparts[1].split("=")[1];
+      }
       const basePng = mode === 'oligomer' ? 'oligomer_png' : 'png';
       const basePdb = mode === 'oligomer' ? 'oligomer_pdb' : 'pdb';
 
