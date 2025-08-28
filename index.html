@@ -52,6 +52,7 @@
     }
 
     function setMode(newMode) {
+console.log('Current button value' + document.getElementById("modeButton") + " mode is : " + mode + " newmode is: " + newMode);
       mode = newMode;
       const currentHash = window.location.hash;
       // Preserve the current dataset in URL while toggling
@@ -66,12 +67,17 @@
     }
 
     function renderModeToggle() {
-      return `
-        <div class="mode-toggle">
-          <button onclick="setMode('monomer')" ${mode === 'monomer' ? 'disabled' : ''}>Monomer</button>
-          <button onclick="setMode('oligomer')" ${mode === 'oligomer' ? 'disabled' : ''}>Oligomer</button>
-        </div>
-      `;
+	    if (mode == 'monomer') {
+		    return `
+		    	<div class="mode-toggle">
+			    <button id="modeButton" onclick="setMode('oligomer')">View Oligomers</button>
+		</div>`;
+	    } else {
+		    return `
+		    	<div class="mode-toggle">
+			    <button id="modeButton" onclick="setMode('monomer')">View monomers</button>
+		</div>`;
+	   }
     }
 
     function goToPhrog() {
@@ -137,7 +143,7 @@
       link.href = `${basePdb}/${phrogId}/${name}.pdb.gz`;
       link.download = `${name}.pdb.gz`;
       link.innerText = `Download ${name}.pdb.gz`;
-      perm.href = `#/dataset/${phrogId}/${name}?mode=${mode}`;
+      perm.href = `#/dataset/${phrogId}/${name}`;
       perm.innerText = `Permanent link to ${name}`;
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
