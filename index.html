@@ -136,14 +136,18 @@ console.log('Current button value' + document.getElementById("modeButton").value
         img.style.display = 'none';
         link.style.display = 'none';
       };
-console.log('Current button value' + document.getElementById("modeButton").value + " mode is : " + mode);
+console.log('Current button value: |' + document.getElementById("modeButton").value + "| mode is : " + mode);
       img.src = `${basePng}/${phrogId}/${name}.png`;
       img.style.display = 'block';
       document.getElementById('linkWrapper').style.display = 'block';
       link.href = `${basePdb}/${phrogId}/${name}.pdb.gz`;
       link.download = `${name}.pdb.gz`;
       link.innerText = `Download ${name}.pdb.gz`;
-      perm.href = `#/dataset/${phrogId}/${name}`;
+      if (name.includes('?mode')) {
+	      perm.href = `#/dataset/${phrogId}/${name}`;
+      } else {
+	      perm.href = `#/dataset/${phrogId}/${name}?mode=${mode}`;
+      }
       perm.innerText = `Permanent link to ${name}`;
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
