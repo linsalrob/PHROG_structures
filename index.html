@@ -52,7 +52,7 @@
     }
 
     function setMode(newMode) {
-console.log('Current button value' + document.getElementById("modeButton") + " mode is : " + mode + " newmode is: " + newMode);
+console.log('Current button value' + document.getElementById("modeButton").value + " mode is : " + mode + " newmode is: " + newMode);
       mode = newMode;
       const currentHash = window.location.hash;
       // Preserve the current dataset in URL while toggling
@@ -136,7 +136,7 @@ console.log('Current button value' + document.getElementById("modeButton") + " m
         img.style.display = 'none';
         link.style.display = 'none';
       };
-
+console.log('Current button value' + document.getElementById("modeButton").value + " mode is : " + mode);
       img.src = `${basePng}/${phrogId}/${name}.png`;
       img.style.display = 'block';
       document.getElementById('linkWrapper').style.display = 'block';
