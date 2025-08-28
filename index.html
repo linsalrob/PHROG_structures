@@ -76,7 +76,7 @@
       }
     }
 
-    function autocomplete(input) {
+    function phrogautocomplete(input) {
       const list = document.getElementById('autocomplete-list');
       list.innerHTML = '';
       const val = input.value;
@@ -156,7 +156,7 @@
           <p>Switch between <strong>Monomer</strong> and <strong>Oligomer</strong> using the toggle below, or once you have chosen a PHROG.</p>
           ${renderModeToggle()}
           <div class="search-box">
-            <input type="text" id="phrogInput" placeholder="Enter PHROG number (e.g., 42)" oninput="autocomplete(this)" />
+            <input type="text" id="phrogInput" placeholder="Enter PHROG number (e.g., 42)" oninput="phrogautocomplete(this)" />
             <div id="autocomplete-list" class="autocomplete-items"></div>
             <button onclick="goToPhrog()">Go</button>
           </div>
@@ -166,7 +166,7 @@
         let html = `<section id="montages"><h2>${mode === 'monomer' ? 'Monomer' : 'Oligomer'} Montages</h2>`;
         html += renderModeToggle();
         html += `<div class="search-box">
-          <input type="text" id="phrogInput" placeholder="Enter PHROG number (e.g., 42)" oninput="autocomplete(this)" />
+          <input type="text" id="phrogInput" placeholder="Enter PHROG number (e.g., 42)" oninput="phrogautocomplete(this)" />
           <div id="autocomplete-list" class="autocomplete-items"></div>
           <button onclick="goToPhrog()">Go</button>
         </div>`;
