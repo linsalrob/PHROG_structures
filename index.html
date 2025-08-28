@@ -143,11 +143,7 @@ console.log('Current button value: |' + document.getElementById("modeButton").va
       link.href = `${basePdb}/${phrogId}/${name}.pdb.gz`;
       link.download = `${name}.pdb.gz`;
       link.innerText = `Download ${name}.pdb.gz`;
-      if (name.includes('?mode')) {
-	      perm.href = `#/dataset/${phrogId}/${name}`;
-      } else {
-	      perm.href = `#/dataset/${phrogId}/${name}?mode=${mode}`;
-      }
+      perm.href = `#/dataset/${phrogId}?mode=${mode}/${name}`;
       perm.innerText = `Permanent link to ${name}`;
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
