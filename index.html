@@ -53,6 +53,7 @@
 
     function setMode(newMode) {
       mode = newMode;
+      alert('mode is: ' + mode);
       parseRoute();
     }
 
@@ -95,7 +96,7 @@
       }
     }
 
-    function viewImage(phrogId, name) {
+    function viewImage(phrogIdmode, name) {
       const spinner = document.getElementById('spinner');
       const error = document.getElementById('errorMessage');
       const img = document.getElementById('fullImage');
@@ -103,6 +104,9 @@
       const perm = document.getElementById('permaLink');
       spinner.style.display = 'block';
       error.style.display = 'none';
+      phrogIdmodeparts = phrogIDmode.split('?');
+      phrogId = phrogIdmodeparts[0];
+      mode = phrogIdmodeparts[1];
       const basePng = mode === 'oligomer' ? 'oligomer_png' : 'png';
       const basePdb = mode === 'oligomer' ? 'oligomer_pdb' : 'pdb';
 
@@ -187,10 +191,11 @@
         html += '<a id="permaLink" class="perma-link">Permanent Link</a> | <a id="downloadLink" class="download-link">Download PDB</a>';
         html += '</span>';
         html += '<h3>All images in this dataset</h3>';
-        html += `<div class="grid">`;
+	html += `<div class="grid">`;
         const baseThumb = mode === 'oligomer' ? 'oligomer_thumbnails' : 'thumbnails';
         for (let i = 1; i <= 100; i++) {
-          const num = i.toString().padStart(5, '0');
+          // const num = i.toString().padStart(5, '0');
+          const num = i.toString().padStart(2, '0');
           const name = `${id}${num}`;
           html += `<img src="${baseThumb}/${id}/${name}.png" alt="${name}" onclick="viewImage('${id}', '${name}')" onerror="this.src='images/not_available.png'">`;
         }
