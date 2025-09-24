@@ -8,14 +8,12 @@
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f7f7f7; }
     header, nav, footer { padding: 1em; background: #222; color: white; text-align: center; }
     nav a { color: #61dafb; margin: 0 1em; text-decoration: none; }
-    .mode-toggle { text-align: center; margin: 15px; }
-    .mode-toggle button { padding: 6px 12px; margin: 0 5px; font-size: 1em; cursor: pointer; }
     .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; padding: 10px; justify-content: center; }
     .grid img { width: 100px; height: 100px; cursor: pointer; border: 1px solid #ccc; background: white; }
     .montage-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 10px; }
     .montage-list a { display: inline-block; border: 1px solid #ccc; padding: 5px; background: white; text-align: center; text-decoration: none; color: black; }
     .full-image { display: block; margin: 20px auto; max-width: 90%; }
-    .link-wrapper { display: block; text-align: center; margin: 10px; font-size: 1.1em; font-family: sans-serif; }
+    .download-link { display: block; text-align: center; margin: 10px; font-size: 1.1em; }
     .search-box { text-align: center; margin: 20px; position: relative; }
     .search-box input { padding: 5px; font-size: 1em; width: 200px; }
     .search-box button { padding: 6px 10px; font-size: 1em; }
@@ -25,73 +23,93 @@
     .spinner { display: none; margin: 20px auto; border: 8px solid #f3f3f3; border-top: 8px solid #3498db; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
     .error-message { text-align: center; color: red; font-weight: bold; margin-top: 10px; display: none; }
-    .placeholder { display: block; margin: 20px auto; max-width: 50%; border: 1px solid #ccc; background-color: #eee; padding: 10px; text-align: center; font-style: italic; color: #555; }
   </style>
 </head>
 <body>
   <header>
     <h1>Welcome to the Phage Protein Structure Gallery</h1>
-    <h3>Images by Susie Grigson with help from George Bouras and Rob Edwards</h3>
+    <h3>Images by Susie Grigson, with help from George Bouras and Rob Edwards</h3>
   </header>
   <nav>
     <a href="#/">Home</a>
-    <a href="#/montages">Montages</a>
+    <a href="#/montages/monomers">Monomer Montages</a>
+    <a href="#/montages/oligomers">Oligomer Montages</a>
   </nav>
   <main id="app"></main>
   <div id="spinner" class="spinner"></div>
-  <div id="errorMessage" class="error-message">Image could not be loaded. This structure may not have been computed yet.</div>
+  <div id="errorMessage" class="error-message">Image could not be loaded. This PHROG may not have an image yet.</div>
   <footer>
     <p>&copy; 2025 <a href="https://fame.flinders.edu.au">FAME</a></p>
   </footer>
   <script>
-    let mode = 'monomer';
+    const routes = {
+      '/': () => `
+        <section id="intro">
+          <h2>Introduction</h2>
+          <p>This site hosts an interactive gallery of phage datasets. Browse monomer and oligomer structures, montages, and thumbnails.</p>
+          <p>The <a href="https://phrogs.lmge.uca.fr/">Prokaryotic Virus Remote Homologous Groups</a> (PHROGS) cover genomes of viruses infecting Bacteria
+          and Archaea. We have generated PDB structure files for representatives of each PHROG, and present them here.</p>
+          <p>Example: 
+            <a href="https://linsalrob.github.io/PHROG_structures/#/dataset/monomers/phrog_005/phrog_00505">
+              PHROG 505 monomer
+            </a>
+          </p>
+          <div class="search-box">
+            <input type="text" id="phrogInput" placeholder="Enter PHROG number (e.g., 42)" oninput="phrogAutocomplete(this)" />
+            <div id="autocomplete-list" class="autocomplete-items"></div>
+            <button onclick="goToPhrog('monomers')">Go (Monomer)</button>
+            <button onclick="goToPhrog('oligomers')">Go (Oligomer)</button>
+          </div>
+        </section>
+      `,
+      '/montages/:mode': (mode) => {
+        const base = mode === 'oligomers' ? 'oligomer_montage' : 'montage';
+        let html = `<section id="montages"><h2>${mode} Montages</h2>`;
+        html += '<div class="montage-list">';
+        for (let i = 0; i < 388; i++) {
+          const id = `phrog_${i.toString().padStart(3, '0')}`;
+          html += `<a href="#/dataset/${mode}/${id}"><img src="${base}/${id}_montage.png" alt="Montage ${id}"><br>${id}</a>`;
+        }
+        html += '</div></section>';
+        return html;
+      },
+      '/dataset/:mode/:id': (mode, id) => {
+        const baseThumb = mode === 'oligomers' ? 'oligomer_thumbnails' : 'thumbnails';
+        let html = `<h2>${mode} Dataset ${id}</h2>`;
 
-    function getModeParam() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('mode') === 'oligomer' ? 'oligomer' : 'monomer';
-    }
+        const otherMode = mode === 'oligomers' ? 'monomers' : 'oligomers';
+        html += '<div class="mode-toggle" style="text-align:center; margin:10px;">';
+        html += `<button onclick="switchMode('${mode}','${id}')">Switch to ${otherMode}</button>`;
+        html += '</div>';
 
-    function setMode(newMode) {
-console.log('Current button value' + document.getElementById("modeButton").value + " mode is : " + mode + " newmode is: " + newMode);
-      mode = newMode;
-      const currentHash = window.location.hash;
-      // Preserve the current dataset in URL while toggling
-      if (currentHash.includes('?')) {
-	      window.location.hash = currentHash.replace(/mode=(monomer|oligomer)/, `mode=${mode}`);
-      } else if (currentHash.startsWith('#/dataset')) {
-	      window.location.hash = `${currentHash}?mode=${mode}`;
-      } else {
-	      parseRoute();
+        html += '<img id="fullImage" class="full-image" style="display:none;">';
+        html += '<span id="linkWrapper" style="display:none">';
+        html += '<a id="permaLink" class="perma-link" style="display:none">Permanent Link</a> | <a id="downloadLink" class="download-link" style="display:none;">Download PDB</a>';
+        html += '</span>';
+        html += '<h3>All images in this dataset</h3>';
+        html += `<div class="grid">`;
+        for (let i = 1; i <= 100; i++) {
+          const num = i.toString().padStart(2, '0');
+          const name = `${id}${num}`;
+          html += `<img src="${baseThumb}/${id}/${name}.png" alt="${name}" onclick="viewImage('${mode}','${id}','${name}')">`;
+        }
+        html += '</div>';
+        return html;
       }
-      parseRoute();
-    }
+    };
 
-    function renderModeToggle() {
-	    if (mode == 'monomer') {
-		    return `
-		    	<div class="mode-toggle">
-			    <button id="modeButton" onclick="setMode('oligomer')">View Oligomers</button>
-		</div>`;
-	    } else {
-		    return `
-		    	<div class="mode-toggle">
-			    <button id="modeButton" onclick="setMode('monomer')">View monomers</button>
-		</div>`;
-	   }
-    }
-
-    function goToPhrog() {
+    function goToPhrog(mode) {
       const input = document.getElementById('phrogInput').value.trim();
       const num = parseInt(input);
       if (!isNaN(num) && num >= 0 && num < 389) {
         const id = `phrog_${num.toString().padStart(3, '0')}`;
-        window.location.hash = `#/dataset/${id}?mode=${mode}`;
+        window.location.hash = `#/dataset/${mode}/${id}`;
       } else {
         alert('Please enter a valid PHROG number between 0 and 388.');
       }
     }
 
-    function phrogautocomplete(input) {
+    function phrogAutocomplete(input) {
       const list = document.getElementById('autocomplete-list');
       list.innerHTML = '';
       const val = input.value;
@@ -110,7 +128,7 @@ console.log('Current button value' + document.getElementById("modeButton").value
       }
     }
 
-    function viewImage(phrogIdmode, name) {
+    function viewImage(mode, phrogId, name) {
       const spinner = document.getElementById('spinner');
       const error = document.getElementById('errorMessage');
       const img = document.getElementById('fullImage');
@@ -118,49 +136,43 @@ console.log('Current button value' + document.getElementById("modeButton").value
       const perm = document.getElementById('permaLink');
       spinner.style.display = 'block';
       error.style.display = 'none';
-      phrogIdmodeparts = phrogIdmode.split('?');
-      phrogId = phrogIdmodeparts[0];
-      if (phrogIdmodeparts.length > 1) {
-          mode = phrogIdmodeparts[1].split("=")[1];
-      }
-      const basePng = mode === 'oligomer' ? 'oligomer_png' : 'png';
-      const basePdb = mode === 'oligomer' ? 'oligomer_pdb' : 'pdb';
+      const basePng = mode === 'oligomers' ? 'oligomer_png' : 'png';
+      const basePdb = mode === 'oligomers' ? 'oligomer_pdb' : 'pdb';
 
-      img.onload = () => {
-        spinner.style.display = 'none';
-        error.style.display = 'none';
-      };
+      img.onload = () => { spinner.style.display = 'none'; error.style.display = 'none'; };
       img.onerror = () => {
         spinner.style.display = 'none';
         error.style.display = 'block';
         img.style.display = 'none';
         link.style.display = 'none';
       };
-console.log('Current button value: |' + document.getElementById("modeButton").value + "| mode is : " + mode);
+
       img.src = `${basePng}/${phrogId}/${name}.png`;
       img.style.display = 'block';
       document.getElementById('linkWrapper').style.display = 'block';
       link.href = `${basePdb}/${phrogId}/${name}.pdb.gz`;
       link.download = `${name}.pdb.gz`;
       link.innerText = `Download ${name}.pdb.gz`;
-      perm.href = `#/dataset/${phrogId}?mode=${mode}/${name}`;
+      link.style.display = 'inline';
+      perm.href = `#/dataset/${mode}/${phrogId}/${name}`;
+      perm.style.display = 'inline';
       perm.innerText = `Permanent link to ${name}`;
-
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function parseRoute() {
-      mode = getModeParam();
       const hash = window.location.hash || '#/';
-      const pathParts = hash.slice(2).split('/');
-      const route = '/' + pathParts[0];
+      const parts = hash.slice(2).split('/');
+      const route = '/' + parts[0];
       const app = document.getElementById('app');
 
-      if (route === '/dataset' && pathParts[1]) {
-        app.innerHTML = routes['/dataset/:id'](pathParts[1]);
-        if (pathParts[2]) {
-          setTimeout(() => viewImage(pathParts[1], pathParts[2]), 0);
+      if (route === '/dataset' && parts[1] && parts[2]) {
+        app.innerHTML = routes['/dataset/:mode/:id'](parts[1], parts[2]);
+        if (parts[3]) {
+          setTimeout(() => viewImage(parts[1], parts[2], parts[3]), 0);
         }
+      } else if (route === '/montages' && parts[1]) {
+        app.innerHTML = routes['/montages/:mode'](parts[1]);
       } else if (routes[route]) {
         app.innerHTML = routes[route]();
       } else {
@@ -168,64 +180,20 @@ console.log('Current button value: |' + document.getElementById("modeButton").va
       }
     }
 
-    const routes = {
-      '/': () => `
-        <section id="intro">
-          <h2>Introduction</h2>
-          <p>This site hosts an interactive gallery of phage datasets. Browse monomer and oligomerised structures, montages, and thumbnails for each dataset.</p>
-          <p>Switch between <strong>Monomer</strong> and <strong>Oligomer</strong> using the toggle below, or once you have chosen a PHROG.</p>
-          ${renderModeToggle()}
-          <div class="search-box">
-            <input type="text" id="phrogInput" placeholder="Enter PHROG number (e.g., 42)" oninput="phrogautocomplete(this)" />
-            <div id="autocomplete-list" class="autocomplete-items"></div>
-            <button onclick="goToPhrog()">Go</button>
-          </div>
-        </section>
-      `,
-      '/montages': () => {
-        let html = `<section id="montages"><h2>${mode === 'monomer' ? 'Monomer' : 'Oligomer'} Montages</h2>`;
-        html += renderModeToggle();
-        html += `<div class="search-box">
-          <input type="text" id="phrogInput" placeholder="Enter PHROG number (e.g., 42)" oninput="phrogautocomplete(this)" />
-          <div id="autocomplete-list" class="autocomplete-items"></div>
-          <button onclick="goToPhrog()">Go</button>
-        </div>`;
-        html += '<div class="montage-list">';
-        const base = mode === 'oligomer' ? 'oligomer_montage' : 'montage';
-        for (let i = 0; i < 388; i++) {
-          const id = `phrog_${i.toString().padStart(3, '0')}`;
-          html += `<a href="#/dataset/${id}?mode=${mode}"><img src="${base}/${id}_montage.png" alt="Montage ${id}" onerror="this.src='images/not_available.png'"> <br>${id}</a>`;
-        }
-        html += '</div></section>';
-        return html;
-      },
-      '/dataset/:id': (idMode) => {
-	idModeParts = idMode.split("?");
-	id = idModeParts[0];
-	if (idModeParts.length > 1) {
-		mode = idModeParts[1].split("=")[1];
+    function switchMode(currentMode, phrogId) {
+	const hashParts = window.location.hash.split('/');
+	const currentName = hashParts[4]; // may be undefined
+	const newMode = currentMode === 'oligomers' ? 'monomers' : 'oligomers';
+	if (currentName) {
+		window.location.hash = `#/dataset/${newMode}/${phrogId}/${currentName}`;
+	} else {
+		window.location.hash = `#/dataset/${newMode}/${phrogId}`;
 	}
-        let html = `<h2>Dataset ${id} (${mode})</h2>`;
-        html += renderModeToggle();
-        html += '<img id="fullImage" class="full-image" style="display:none;">';
-        html += '<span id="linkWrapper" class="link-wrapper" style="display:none;">';
-        html += '<a id="permaLink" class="perma-link">Permanent Link</a> | <a id="downloadLink" class="download-link">Download PDB</a>';
-        html += '</span>';
-        html += '<h3>All images in this dataset</h3>';
-	html += `<div class="grid">`;
-        const baseThumb = mode === 'oligomer' ? 'oligomer_thumbnails' : 'thumbnails';
-        for (let i = 1; i < 100; i++) {
-          // const num = i.toString().padStart(5, '0');
-          const num = i.toString().padStart(2, '0');
-          const name = `${id}${num}`;
-          html += `<img src="${baseThumb}/${id}/${name}.png" alt="${name}" onclick="viewImage('${id}', '${name}')" onerror="this.src='images/not_available.png'">`;
-        }
-        html += '</div>';
-        return html;
-      }
-    };
+   }  
+
     window.addEventListener('hashchange', parseRoute);
     window.addEventListener('load', parseRoute);
   </script>
 </body>
 </html>
+
