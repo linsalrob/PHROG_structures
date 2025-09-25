@@ -134,6 +134,8 @@
       const img = document.getElementById('fullImage');
       const link = document.getElementById('downloadLink');
       const perm = document.getElementById('permaLink');
+      // this is the github branch that we use for the github pages
+      const ghbranch = 'oligomers'; 
       spinner.style.display = 'block';
       error.style.display = 'none';
       const basePng = mode === 'oligomers' ? 'oligomer_png' : 'png';
@@ -150,7 +152,7 @@
       img.src = `${basePng}/${phrogId}/${name}.png`;
       img.style.display = 'block';
       document.getElementById('linkWrapper').style.display = 'block';
-      link.href = `https://github.com/linsalrob/PHROG_structures/raw/refs/heads/gh-pages/${basePdb}/${phrogId}/${name}.pdb.gz`;
+      link.href = `https://github.com/linsalrob/PHROG_structures/raw/refs/heads/${ghbranch}/${basePdb}/${phrogId}/${name}.pdb.gz`;
       link.download = `${name}.pdb.gz`;
       link.innerText = `Download ${name}.pdb.gz`;
       link.style.display = 'inline';
