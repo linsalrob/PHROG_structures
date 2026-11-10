@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PHROG Structure Gallery</title>
+  <link rel="preconnect" href="https://projects.pawsey.org.au" />
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f7f7f7; }
     header, nav, footer { padding: 1em; background: #222; color: white; text-align: center; }
@@ -50,18 +51,26 @@
     const MAX_PHROG = 38880;
     const MODES = ['monomers', 'oligomers'];
 
-    // The .pdb.gz files are in git-lfs, which GitHub Pages does not serve, so
-    // downloads go via github.com/<repo>/raw/. Work out which repository this
-    // copy of the site is served from, and fall back to production elsewhere.
-    const PAGES_BRANCH = { 'linsalrob/PHROG_structures': 'oligomers', 'linsalrob/PHROG_structures_dev': 'main' };
-    const SITE = (() => {
-      const owner = window.location.hostname.replace(/\.github\.io$/, '');
-      const repo = `${owner}/${window.location.pathname.split('/')[1]}`;
-      if (window.location.hostname.endsWith('.github.io') && PAGES_BRANCH[repo]) {
-        return { repo, branch: PAGES_BRANCH[repo] };
-      }
-      return { repo: 'linsalrob/PHROG_structures', branch: 'oligomers' };
-    })();
+    // Images and PDB files are served from the public Pawsey Acacia bucket, not GitHub Pages.
+    // Object keys are the paths used in the repository, e.g. png/phrog_005/phrog_00505.png.
+    const ASSET_BASE = 'https://projects.pawsey.org.au/phrogstructures-public/';
+    const DIRS = {
+      monomers: { png: 'png', thumbnails: 'thumbnails', pdb: 'pdb', montage: 'montage' },
+      oligomers: { png: 'oligomer_png', thumbnails: 'oligomer_thumbnails', pdb: 'oligomer_pdb', montage: 'oligomer_montage' },
+    };
+    const assetUrl = (mode, kind, id, name) => kind === 'montage'
+      ? `${ASSET_BASE}${DIRS[mode].montage}/${id}_montage.png`
+      : `${ASSET_BASE}${DIRS[mode][kind]}/${id}/${name}.${kind === 'pdb' ? 'pdb.gz' : 'png'}`;
+
+    // manifest.json (made by scripts/build_manifest.py) says which assets exist, so pages only
+    // request images that are there. If it cannot be loaded, every possible image is requested.
+    let MANIFEST = null;
+    const has = (mode, kind, phrog) => {
+      if (!MANIFEST) return true;
+      const hex = MANIFEST.modes[mode][kind][Math.floor(phrog / 100)];
+      const i = phrog % 100;
+      return Boolean(hex) && ((parseInt(hex[i >> 2], 16) >> (3 - (i & 3))) & 1) === 1;
+    };
 
     const groupId = (g) => `phrog_${g.toString().padStart(3, '0')}`;
     const phrogName = (n) => `phrog_${n.toString().padStart(5, '0')}`;
@@ -93,20 +102,27 @@
         </section>
       `,
       '/montages/:mode': (mode) => {
-        const base = mode === 'oligomers' ? 'oligomer_montage' : 'montage';
         let html = `<section id="montages"><h2>${mode} Montages</h2>`;
         html += '<div class="montage-list">';
         for (let i = 0; i < NGROUPS; i++) {
           const id = groupId(i);
-          html += `<a href="#/dataset/${mode}/${id}"><img src="${base}/${id}_montage.png" alt="Montage ${id}" loading="lazy" onerror="this.onerror=null; this.src='images/not_available.png'"><br>${id}<br>${groupRange(id)}</a>`;
+          const src = !MANIFEST || MANIFEST.modes[mode].montage.includes(i) ? assetUrl(mode, 'montage', id) : 'images/not_available.png';
+          html += `<a href="#/dataset/${mode}/${id}"><img src="${src}" alt="Montage ${id}" loading="lazy" onerror="this.onerror=null; this.src='images/not_available.png'"><br>${id}<br>${groupRange(id)}</a>`;
         }
         html += '</div></section>';
         return html;
       },
       '/dataset/:mode/:id': (mode, id) => {
-        const baseThumb = mode === 'oligomers' ? 'oligomer_thumbnails' : 'thumbnails';
+        const first = parseInt(id.slice(6), 10) * 100;
+        const members = [];
+        for (let i = 0; i < 100; i++) {
+          const n = first + i;
+          if (!MANIFEST || has(mode, 'thumbnails', n) || has(mode, 'png', n) || has(mode, 'pdb', n)) members.push(n);
+        }
         let html = `<h2>${mode}: ${groupRange(id)} (${id})</h2>`;
-        html += `<p style="text-align:center">PHROGs are grouped in sets of 100. This page shows every PHROG in ${id}; click a thumbnail to view that structure.</p>`;
+        html += `<p style="text-align:center">PHROGs are grouped in sets of 100. This page shows every PHROG in ${id}`;
+        html += MANIFEST ? ` with a ${mode.slice(0, -1)} structure (${members.length} of 100)` : '';
+        html += '; click a thumbnail to view that structure.</p>';
 
         const otherMode = mode === 'oligomers' ? 'monomers' : 'oligomers';
         html += '<div class="mode-toggle" style="text-align:center; margin:10px;">';
@@ -115,14 +131,14 @@
 
         html += '<img id="fullImage" class="full-image" style="display:none;">';
         html += '<div id="linkWrapper" class="link-wrapper" style="display:none">';
-        html += '<a id="permaLink" class="perma-link">Permanent Link</a> | <a id="downloadLink" class="download-link">Download PDB</a>';
+        html += '<a id="permaLink" class="perma-link">Permanent Link</a><span id="linkSep"> | </span><a id="downloadLink" class="download-link">Download PDB</a>';
         html += '</div>';
         html += `<h3>All ${groupRange(id)}</h3>`;
         html += `<div class="grid">`;
-        for (let i = 0; i < 100; i++) {
-          const num = i.toString().padStart(2, '0');
-          const name = `${id}${num}`;
-          html += `<img src="${baseThumb}/${id}/${name}.png" alt="${name}" loading="lazy" onclick="viewImage('${mode}','${id}','${name}')" onerror="this.onerror=null; this.src='images/not_available.png'">`;
+        for (const n of members) {
+          const name = phrogName(n);
+          const src = has(mode, 'thumbnails', n) ? assetUrl(mode, 'thumbnails', id, name) : 'images/not_available.png';
+          html += `<img src="${src}" alt="${name}" title="PHROG ${n}" loading="lazy" onclick="viewImage('${mode}','${id}','${name}')" onerror="this.onerror=null; this.src='images/not_available.png'">`;
         }
         html += '</div>';
         return html;
@@ -170,27 +186,40 @@
       const wrapper = document.getElementById('linkWrapper');
       const link = document.getElementById('downloadLink');
       const perm = document.getElementById('permaLink');
-      spinner.style.display = 'block';
+      const sep = document.getElementById('linkSep');
+      const phrog = parseInt(name.slice(6), 10);
+      const hasPdb = has(mode, 'pdb', phrog);
+      const showError = (msg) => {
+        spinner.style.display = 'none';
+        error.textContent = msg;
+        error.style.display = 'block';
+        img.style.display = 'none';
+      };
       error.style.display = 'none';
-      const basePng = mode === 'oligomers' ? 'oligomer_png' : 'png';
-      const basePdb = mode === 'oligomers' ? 'oligomer_pdb' : 'pdb';
 
       img.onload = () => { spinner.style.display = 'none'; error.style.display = 'none'; };
       img.onerror = () => {
-        spinner.style.display = 'none';
-        error.style.display = 'block';
-        img.style.display = 'none';
-        wrapper.style.display = 'none';
+        showError('Image could not be loaded. This PHROG may not have an image yet.');
+        // Without the manifest we cannot tell whether the PDB file exists either.
+        if (!MANIFEST) wrapper.style.display = 'none';
       };
 
-      img.src = `${basePng}/${phrogId}/${name}.png`;
-      img.style.display = 'block';
       wrapper.style.display = 'block';
-      link.href = `https://github.com/${SITE.repo}/raw/refs/heads/${SITE.branch}/${basePdb}/${phrogId}/${name}.pdb.gz`;
+      link.style.display = sep.style.display = hasPdb ? 'inline' : 'none';
+      link.href = assetUrl(mode, 'pdb', phrogId, name);
       link.download = `${name}.pdb.gz`;
-      link.innerText = `Download ${name}.pdb.gz`;
+      link.textContent = `Download ${name}.pdb.gz`;
       perm.href = `#/dataset/${mode}/${phrogId}/${name}`;
-      perm.innerText = `Permanent link to ${name}`;
+      perm.textContent = `Permanent link to ${name}`;
+      if (has(mode, 'png', phrog)) {
+        spinner.style.display = 'block';
+        img.src = assetUrl(mode, 'png', phrogId, name);
+        img.style.display = 'block';
+      } else {
+        img.removeAttribute('src');
+        showError(hasPdb ? `There is no image of ${name} yet, but its structure can be downloaded.`
+                         : `PHROG ${phrog} has no ${mode.slice(0, -1)} structure.`);
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -230,8 +259,17 @@
    }
 
     document.getElementById('year').textContent = new Date().getFullYear();
-    window.addEventListener('hashchange', parseRoute);
-    window.addEventListener('load', parseRoute);
+    window.addEventListener('load', () => {
+      Promise.resolve()
+        .then(() => fetch('manifest.json'))
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null)
+        .then((m) => {
+          MANIFEST = m && m.modes ? m : null;
+          window.addEventListener('hashchange', parseRoute);
+          parseRoute();
+        });
+    });
   </script>
 </body>
 </html>

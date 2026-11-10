@@ -208,3 +208,6 @@ __marimo__/
 
 node_modules/
 .DS_Store
+
+# GitHub Pages staging directory (scripts/stage_site.sh)
+_site/

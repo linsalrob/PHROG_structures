@@ -1,0 +1,11 @@
+{
+  "name": "phrog-structures-site",
+  "private": true,
+  "description": "Tests for the PHROG structure gallery (index.html)",
+  "scripts": {
+    "test": "node tests/site.test.js"
+  },
+  "devDependencies": {
+    "jsdom": "24.1.3"
+  }
+}

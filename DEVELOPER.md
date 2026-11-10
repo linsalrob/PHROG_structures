@@ -38,3 +38,7 @@ convert "png/phrog_025/phrog_02522.png" -resize 100x100 "thumbnails/phrog_025/ph
 Again, using imagemagick:
 
 
+
+# Serving the images
+
+The website loads images and structures from Pawsey Acacia. See [docs/acacia.md](docs/acacia.md) for how they are published, checked and indexed in `manifest.json`.

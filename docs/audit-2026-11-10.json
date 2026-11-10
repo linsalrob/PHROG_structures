@@ -1,0 +1,141 @@
+{
+ "date": "2026-11-10",
+ "reference": "linsalrob/PHROG_structures@oligomers f450191",
+ "source_bucket": "A18:phrogstructures",
+ "public_bucket": "A18:phrogstructures-public",
+ "reconciliation_by_path_and_size": {
+  "images": {
+   "missing": 1,
+   "bytes": 267537
+  },
+  "montage": {
+   "size_mismatch": 389,
+   "bytes": 702282746
+  },
+  "oligomer_montage": {
+   "missing": 389,
+   "bytes": 190172444
+  },
+  "oligomer_pdb": {
+   "size_ok": 6902,
+   "bytes": 444101368
+  },
+  "oligomer_png": {
+   "size_ok": 6901,
+   "bytes": 650847085
+  },
+  "oligomer_thumbnails": {
+   "missing": 6900,
+   "bytes": 58508755
+  },
+  "pdb": {
+   "size_ok": 38853,
+   "bytes": 926062017
+  },
+  "png": {
+   "size_ok": 38853,
+   "bytes": 1796060875
+  },
+  "thumbnails": {
+   "size_ok": 38853,
+   "bytes": 221617778
+  }
+ },
+ "note_montage": "size_mismatch: bucket held commit 3e8fea0 montages; production has 23c33b6. Replaced from production.",
+ "note_missing": "oligomer_montage and oligomer_thumbnails absent from source bucket; uploaded from production. images/ is served by Pages, not Acacia.",
+ "checksum_verification": [
+  {
+   "dir": "oligomer_pdb",
+   "kind": "lfs",
+   "verified": true,
+   "files": 6902
+  },
+  {
+   "dir": "oligomer_png",
+   "kind": "git",
+   "verified": true,
+   "files": 6901
+  },
+  {
+   "dir": "pdb",
+   "kind": "lfs",
+   "verified": true,
+   "files": 38853
+  },
+  {
+   "dir": "png",
+   "kind": "git",
+   "verified": true,
+   "files": 38853
+  },
+  {
+   "dir": "thumbnails",
+   "kind": "git",
+   "verified": true,
+   "files": 38853
+  }
+ ],
+ "checksum_method": {
+  "lfs": "sha256(content) == git-lfs oid",
+  "git": "sha1('blob <size>\\0' + content) == git tree blob sha"
+ },
+ "public_bucket_contents": {
+  "SHA256SUMS": {
+   "files": 1,
+   "bytes": 13899421
+  },
+  "montage": {
+   "files": 389,
+   "bytes": 702282746
+  },
+  "oligomer_montage": {
+   "files": 389,
+   "bytes": 190172444
+  },
+  "oligomer_pdb": {
+   "files": 6902,
+   "bytes": 444101368
+  },
+  "oligomer_png": {
+   "files": 6902,
+   "bytes": 650914676
+  },
+  "oligomer_thumbnails": {
+   "files": 6901,
+   "bytes": 58516636
+  },
+  "pdb": {
+   "files": 38853,
+   "bytes": 926062017
+  },
+  "png": {
+   "files": 38853,
+   "bytes": 1796060875
+  },
+  "thumbnails": {
+   "files": 38853,
+   "bytes": 221617778
+  }
+ },
+ "public_bucket_check": "138042 expected objects present; 0 missing, 0 extra, 0 size/MD5 mismatches",
+ "exceptions": [
+  {
+   "phrog": "phrog_00003",
+   "mode": "oligomers",
+   "issue": "production PNG misfiled at oligomer_png/phrog_3.2/, no thumbnail",
+   "resolution": "PNG also placed at oligomer_png/phrog_000/; thumbnail made with magick -resize 100x100 (sha256 08b9ceec051a11b7f476c3726a7eefc8e8331749c3d9c59f17969c10abe8cf19)"
+  },
+  {
+   "phrog": "phrog_25222",
+   "mode": "oligomers",
+   "issue": "PDB only; no PNG or thumbnail in production or Acacia",
+   "resolution": "site shows a message and keeps the download link"
+  }
+ ],
+ "not_copied_from_source_bucket": [
+  ".git/ (6.6 GB repository copy incl. git-lfs store)",
+  "cxc/",
+  "pngc/ (duplicate of png/)",
+  "root files"
+ ]
+}

@@ -1,0 +1,58 @@
+# Build and deploy the GitHub Pages site from an allowlist of small files (scripts/stage_site.sh).
+# Images and PDB files are served from Pawsey Acacia, so they are never part of the Pages artifact.
+# Requires Settings > Pages > Source = "GitHub Actions".
+name: Pages
+
+on:
+  push:
+    branches: [oligomers]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          lfs: false
+          # Only the front end is needed; skip the image and structure directories.
+          filter: blob:none
+          sparse-checkout: |
+            .github
+            docs
+            images
+            scripts
+            tests
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm test
+      - name: Stage site and check artifact size
+        run: scripts/stage_site.sh _site
+      - uses: actions/upload-pages-artifact@v5
+        if: github.event_name != 'pull_request'
+        with:
+          path: _site
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/oligomers'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
