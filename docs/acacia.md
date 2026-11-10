@@ -131,8 +131,8 @@ contains PNG, PDB or `.gz` files outside `images/`, or contains git-lfs pointers
 the site branch (`main` in PHROG_structures_dev, `oligomers` in PHROG_structures), `_site/` is
 deployed with `actions/deploy-pages`. Pull requests run only the build and checks.
 
-The checkout is sparse and blobless, so CI never fetches the image and structure directories.
-Production's `oligomers` branch still holds them as ordinary git blobs (about 3.5 GB).
+The checkout is sparse and blobless, so CI fetches only the front end even if a branch holds
+data directories.
 
 This requires **Settings → Pages → Source = GitHub Actions**. With "Deploy from a branch",
 GitHub publishes the whole branch.
@@ -144,26 +144,34 @@ browser (2026-11-10: images load from `projects.pawsey.org.au`), its sample data
 and `.gitattributes` rules were removed. Earlier commits still point at their LFS objects, so
 this does not by itself reduce GitHub LFS storage; that needs the objects deleted on GitHub.
 
-Production's `oligomers` branch still has its data directories and LFS rules, which keeps the
-rollback below simple.
-
 ## Production cutover (2026-11-10)
 
-Production (`linsalrob/PHROG_structures`, branch `oligomers`) was moved over after the dev site
-was approved:
+Production was moved over in two stages.
 
-1. `index.html`, `manifest.json`, `package.json`, `package-lock.json`, `tests/`, `scripts/`,
-   `docs/`, `README.md`, `DEVELOPER.md`, `.gitignore` and `.github/workflows/pages.yml` were
-   copied to `oligomers` with `scripts/push_to_branch.sh`. In the workflow, `main` is replaced
-   by `oligomers`.
-2. Settings → Pages → Source was set to GitHub Actions
-   (`gh api -X PUT repos/linsalrob/PHROG_structures/pages -f build_type=workflow`). The
-   `github-pages` environment already allowed deployments from `oligomers`.
-3. Check after each deploy: the artifact is a few hundred KB, and the live gallery loads
-   montages, group pages and the viewer in both modes, with images and PDB downloads from
-   `projects.pawsey.org.au`.
+1. **Front end.** `index.html`, `manifest.json`, the tests, scripts, docs and
+   `.github/workflows/pages.yml` (with `main` replaced by `oligomers`) were copied to
+   `oligomers` with `scripts/push_to_branch.sh`, and Settings → Pages → Source was set to GitHub
+   Actions. The first deploy published 349,782 bytes.
+2. **Data and git-lfs removed.** GitHub frees LFS storage only when a repository is deleted, so:
+   - the old repository was renamed to
+     [`linsalrob/PHROG_structures_archive`](https://github.com/linsalrob/PHROG_structures_archive)
+     and archived. It keeps the full history, the data directories, every LFS object, the
+     stars, the `Vini2` fork and the Zenodo webhook;
+   - its history was rewritten with `git filter-repo --refs main..oligomers --invert-paths
+     --prune-empty never` (paths `png/`, `thumbnails/`, `pdb/`, `montage/`, the four
+     `oligomer_*` directories and `.gitattributes`). All 2,033 commits, authors, dates and
+     messages are kept; `main` (`494c4e3`) and tag `v0.1` (`2656b5e`) are unchanged, with their
+     signatures. The tip tree is identical to the archive's apart from the data. The repository
+     is 1.7 MB instead of 6.7 GB plus about 1.4 GB of LFS objects;
+   - `main`, `oligomers` and `v0.1` were pushed to a new `linsalrob/PHROG_structures`. The
+     `v0.1` release was recreated, and Pages deploys from `oligomers` through the workflow
+     (the `github-pages` environment allows `oligomers`).
 
-**Rollback:** set Source back to "Deploy from a branch: `oligomers` / root"
-(`gh api -X PUT repos/linsalrob/PHROG_structures/pages -f build_type=legacy -f 'source[branch]=oligomers' -f 'source[path]=/'`)
-and revert the cutover commit. The images are still in the branch, so the old site comes back
-as it was. The deploy timeouts may come back with it.
+LFS storage is charged until the archive is deleted, and the monthly figure resets on the first
+of the following month. Re-enable the Zenodo GitHub integration on the new repository before the
+next release.
+
+**Rollback:** the archive still holds the old site. Delete or rename the new repository, rename
+the archive back to `PHROG_structures`, unarchive it and redeploy. Once the archive is deleted,
+the only copies of the data are the current versions in `phrogstructures-public` (see above);
+earlier versions of files are gone.
