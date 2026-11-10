@@ -6,11 +6,11 @@ These structures were created by Susie Grigson at Flinders University using reso
 
 Please [see the website](https://linsalrob.github.io/PHROG_structures/) for the interactive version.
 
-To download the raw data, please install [git-lfs](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage). Then you can clone this repo and switch to the `gh-pages` branch:
+To download the raw data, please install [git-lfs](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage). Then you can clone this repo and switch to the `oligomers` branch, which is the one the website is served from:
 
 ```
 git clone https://github.com/linsalrob/PHROG_structures.git
-git checkout gh-pages
+git checkout oligomers
 ```
 
 This will refresh with _all_ the `.png` and `.pdb` files. 
